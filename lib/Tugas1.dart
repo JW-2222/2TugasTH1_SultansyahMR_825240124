@@ -26,9 +26,11 @@ class ShoppingCartPage extends StatefulWidget {
 class _ShoppingCartPageState extends State<ShoppingCartPage> {
   int _selectedIndex = 2;
 
+  // variabel buat pop up notif
   bool showPopup = false;
   String popupProductName = '';
 
+  // data barangnya disimpen di list
   List<Map<String, dynamic>> products = [
     {
       'name': 'Wireless Headphone',
@@ -62,26 +64,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
     },
   ];
 
-  int get totalPrice {
-    int total = 0;
-    for (var product in products) {
-      if (product['isHighlighted'] == true) {
-        total += (product['price'] as int) * (product['qty'] as int);
-      }
-    }
-    return total;
-  }
-
-  int get totalSelectedItems {
-    int count = 0;
-    for (var product in products) {
-      if (product['isHighlighted'] == true) {
-        count++;
-      }
-    }
-    return count;
-  }
-
+  // bikin fungsi format rupiah manual
   String formatRupiah(int number) {
     String result = number.toString();
     String formatted = '';
@@ -99,6 +82,23 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
 
   @override
   Widget build(BuildContext context) {
+
+    // --- PENERAPAN MEDIAQUERY SESUAI KETENTUAN DOSEN ---
+    // Mendeteksi lebar layar secara real-time untuk breakpoint responsive (Mobile vs Tablet/Desktop)
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isDesktopOrTablet = screenWidth > 600; // Breakpoint di angka 600 pixel
+
+    // ngitung total harga sama item di dalam build
+    int totalPrice = 0;
+    int totalSelectedItems = 0;
+
+    for (var product in products) {
+      if (product['isHighlighted'] == true) {
+        totalPrice += (product['price'] as int) * (product['qty'] as int);
+        totalSelectedItems++;
+      }
+    }
+
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
@@ -120,126 +120,153 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
         ],
       ),
 
+      // pake stack biar pop up nya bisa nimpa di atas list
       body: Stack(
         children: [
-          ListView.builder(
-            padding: const EdgeInsets.only(top: 16, left: 16, right: 16, bottom: 100),
-            itemCount: products.length,
-            itemBuilder: (context, index) {
-              final product = products[index];
+          Center(
+            // Responsive Container: Kalau di Tablet/Desktop, lebar maksimal dibatasi biar gak kepanjangan
+            child: Container(
+              width: isDesktopOrTablet ? 600 : double.infinity,
+              child: ListView.builder(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktopOrTablet ? 24 : 16,
+                  vertical: 16,
+                ),
+                itemCount: products.length,
+                itemBuilder: (context, index) {
+                  final product = products[index];
 
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    product['isHighlighted'] = !product['isHighlighted'];
-                  });
-                },
-                onDoubleTap: () {
-                  setState(() {
-                    product['likes'] += 1;
-                    product['isLiked'] = true;
-                  });
-                },
-
-                onLongPress: () {
-                  setState(() {
-                    showPopup = true;
-                    popupProductName = product['name'];
-                  });
-
-                  Future.delayed(const Duration(seconds: 2), () {
-                    if (mounted) {
+                  return GestureDetector(
+                    onTap: () {
                       setState(() {
-                        showPopup = false;
+                        product['isHighlighted'] = !product['isHighlighted'];
                       });
-                    }
-                  });
-                },
+                    },
+                    onDoubleTap: () {
+                      setState(() {
+                        product['likes'] += 1;
+                        product['isLiked'] = true;
+                      });
+                    },
+                    onLongPress: () {
+                      setState(() {
+                        showPopup = true;
+                        popupProductName = product['name'];
+                      });
 
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: product['isHighlighted'] ? const Color(0xFF1E88E5) : Colors.transparent,
-                      width: 2,
-                    ),
-                    boxShadow: [
-                      BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4)),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.network(
-                            product['image'],
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Icon(Icons.broken_image, size: 40, color: Colors.grey[400]);
-                            },
-                          ),
+                      Future.delayed(const Duration(seconds: 2), () {
+                        if (mounted) {
+                          setState(() {
+                            showPopup = false;
+                          });
+                        }
+                      });
+                    },
+
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: product['isHighlighted'] ? const Color(0xFF1E88E5) : Colors.transparent,
+                          width: 2,
                         ),
+                        boxShadow: [
+                          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4)),
+                        ],
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(product['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            Text(product['brand'], style: const TextStyle(color: Colors.grey, fontSize: 12)),
-                            const SizedBox(height: 4),
-                            Text(formatRupiah(product['price']), style: const TextStyle(color: Color(0xFF1E88E5), fontWeight: FontWeight.bold)),
-                            const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Row(
+                        children: [
+                          Container(
+                            width: isDesktopOrTablet ? 100 : 80, // Ukuran gambar menyesuaikan layar
+                            height: isDesktopOrTablet ? 100 : 80,
+                            decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(8),
+                              child: Image.network(
+                                product['image'],
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) {
+                                  return Icon(Icons.broken_image, size: 40, color: Colors.grey[400]);
+                                },
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Text(product['name'], style: TextStyle(fontWeight: FontWeight.bold, fontSize: isDesktopOrTablet ? 16 : 14)),
+                                Text(product['brand'], style: TextStyle(color: Colors.grey, fontSize: isDesktopOrTablet ? 14 : 12)),
+                                const SizedBox(height: 4),
+                                Text(formatRupiah(product['price']), style: TextStyle(color: const Color(0xFF1E88E5), fontWeight: FontWeight.bold, fontSize: isDesktopOrTablet ? 15 : 13)),
+                                const SizedBox(height: 8),
                                 Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Icon(
-                                      product['isLiked'] ? Icons.favorite : Icons.favorite_border,
-                                      color: product['isLiked'] ? Colors.red : Colors.grey,
-                                      size: 18,
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          product['isLiked'] ? Icons.favorite : Icons.favorite_border,
+                                          color: product['isLiked'] ? Colors.red : Colors.grey,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text('${product['likes']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                      ],
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text('${product['likes']}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    _buildQtyButton(Icons.remove, () {
-                                      if (product['qty'] > 1) {
-                                        setState(() => product['qty'] -= 1);
-                                      }
-                                    }),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                                      child: Text('${product['qty']}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                                    ),
-                                    _buildQtyButton(Icons.add, () {
-                                      setState(() => product['qty'] += 1);
-                                    }),
+
+                                    Row(
+                                      children: [
+                                        InkWell(
+                                          onTap: () {
+                                            if (product['qty'] > 1) {
+                                              setState(() => product['qty'] -= 1);
+                                            }
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(4)),
+                                            child: const Icon(Icons.remove, size: 16, color: Color(0xFF1E88E5)),
+                                          ),
+                                        ),
+
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                                          child: Text('${product['qty']}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                        ),
+
+                                        InkWell(
+                                          onTap: () {
+                                            setState(() => product['qty'] += 1);
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(4)),
+                                            child: const Icon(Icons.add, size: 16, color: Color(0xFF1E88E5)),
+                                          ),
+                                        ),
+                                      ],
+                                    )
                                   ],
                                 )
                               ],
-                            )
-                          ],
-                        ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                ),
-              );
-            },
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
 
+          // tampilan pop up
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
@@ -280,6 +307,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
         ],
       ),
 
+      // bagian bawah keranjang
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -340,17 +368,6 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildQtyButton(IconData icon, VoidCallback onTap) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(4),
-        decoration: BoxDecoration(color: Colors.blue[50], borderRadius: BorderRadius.circular(4)),
-        child: Icon(icon, size: 16, color: const Color(0xFF1E88E5)),
       ),
     );
   }
