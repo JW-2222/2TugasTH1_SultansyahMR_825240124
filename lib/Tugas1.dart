@@ -26,11 +26,9 @@ class ShoppingCartPage extends StatefulWidget {
 class _ShoppingCartPageState extends State<ShoppingCartPage> {
   int _selectedIndex = 2;
 
-  // variabel buat pop up notif
   bool showPopup = false;
   String popupProductName = '';
 
-  // data barangnya disimpen di list
   List<Map<String, dynamic>> products = [
     {
       'name': 'Wireless Headphone',
@@ -64,7 +62,6 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
     },
   ];
 
-  // bikin fungsi format rupiah manual
   String formatRupiah(int number) {
     String result = number.toString();
     String formatted = '';
@@ -83,12 +80,9 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
   @override
   Widget build(BuildContext context) {
 
-    // --- PENERAPAN MEDIAQUERY SESUAI KETENTUAN DOSEN ---
-    // Mendeteksi lebar layar secara real-time untuk breakpoint responsive (Mobile vs Tablet/Desktop)
     double screenWidth = MediaQuery.of(context).size.width;
     bool isDesktopOrTablet = screenWidth > 600; // Breakpoint di angka 600 pixel
 
-    // ngitung total harga sama item di dalam build
     int totalPrice = 0;
     int totalSelectedItems = 0;
 
@@ -120,11 +114,9 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
         ],
       ),
 
-      // pake stack biar pop up nya bisa nimpa di atas list
       body: Stack(
         children: [
           Center(
-            // Responsive Container: Kalau di Tablet/Desktop, lebar maksimal dibatasi biar gak kepanjangan
             child: Container(
               width: isDesktopOrTablet ? 600 : double.infinity,
               child: ListView.builder(
@@ -181,7 +173,7 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
                       child: Row(
                         children: [
                           Container(
-                            width: isDesktopOrTablet ? 100 : 80, // Ukuran gambar menyesuaikan layar
+                            width: isDesktopOrTablet ? 100 : 80,
                             height: isDesktopOrTablet ? 100 : 80,
                             decoration: BoxDecoration(color: Colors.grey[200], borderRadius: BorderRadius.circular(8)),
                             child: ClipRRect(
@@ -266,7 +258,6 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
             ),
           ),
 
-          // tampilan pop up
           AnimatedPositioned(
             duration: const Duration(milliseconds: 400),
             curve: Curves.easeOutBack,
@@ -307,7 +298,6 @@ class _ShoppingCartPageState extends State<ShoppingCartPage> {
         ],
       ),
 
-      // bagian bawah keranjang
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
